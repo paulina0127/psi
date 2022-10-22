@@ -1,1 +1,3 @@
-Repozytorium do ćwiczeń z programowania serwisów internetowych
+# Temat: Cukiernia internetowa
+## Model bazy danych
+![Model bazy danych](db_schema.png)
