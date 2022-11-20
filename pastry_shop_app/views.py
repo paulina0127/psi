@@ -40,6 +40,7 @@ class ProductTypeList(generics.ListCreateAPIView):
     queryset = ProductType.objects.all()
     serializer_class = ProductTypeSerializer
     name = 'product-type-list'
+    filterset_fields = ['name']
     search_fields = ['name']
     ordering_fields = ['id', 'price']
 
@@ -82,7 +83,7 @@ class ProductList(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     name = 'product-list'
-    filterset_fields = ['type', 'flavour', 'topper']
+    filterset_fields = ['type', 'flavour']
     search_fields = ['id', 'name']
     ordering_fields = ['id', 'price']
 
@@ -91,21 +92,6 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     name = 'product-detail'
-
-
-class CustomProductList(generics.ListCreateAPIView):
-    queryset = CustomProduct.objects.all()
-    serializer_class = CustomProductSerializer
-    name = 'custom-product-list'
-    filterset_fields = ['type', 'flavour', 'topper']
-    search_fields = ['id', 'name']
-    ordering_fields = ['id', 'price']
-
-
-class CustomProductDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = CustomProduct.objects.all()
-    serializer_class = CustomProductSerializer
-    name = 'custom-product-detail'
 
 
 class OrderList(generics.ListCreateAPIView):
@@ -148,7 +134,6 @@ class ApiRoot(generics.GenericAPIView):
                          'product-flavours': reverse(ProductFlavourList.name, request=request),
                          'product-toppers': reverse(ProductTopperList.name, request=request),
                          'products': reverse(ProductList.name, request=request),
-                         'custom-products': reverse(CustomProductList.name, request=request),
                          'orders': reverse(OrderList.name, request=request),
                          'order-details': reverse(OrderDetailsList.name, request=request)
                          })
