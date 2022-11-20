@@ -33,11 +33,6 @@ urlpatterns = [
          name=views.ProductList.name),
     path('products/<int:pk>', views.ProductDetail.as_view(),
          name=views.ProductDetail.name),
-    # custom products
-    path('custom-products', views.CustomProductList.as_view(),
-         name=views.CustomProductList.name),
-    path('custom-products/<int:pk>', views.CustomProductDetail.as_view(),
-         name=views.CustomProductDetail.name),
     # order
     path('orders', views.OrderList.as_view(),
          name=views.OrderList.name),
