@@ -102,22 +102,17 @@ class OrderSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['url', 'id', 'status', 'order_date',
                   'pickup_date', 'pickup_time', 'total', 'customer']
 
-    def validate_pickup_date(self, value):
-        if Order.clean() == False:
-            raise serializers.ValidationError(
-                "Data odbioru musi być późniejsza niż data zamówienia.")
-        return value
-
     def validate_total(self, value):
         if value <= 0:
             raise serializers.ValidationError(
                 "Cena całkowita musi być większa niż 0.")
         return value
 
-    # def validate(self, data):
-    #     if self.data['order_date'] > self.data['pickup_date']:
-    #         raise serializers.ValidationError(
-    #             "Data odbioru musi być późniejsza niż data zamówienia.")
+    def validate(self, data):
+        if data['pickup_date'] < datetime.date.today():
+            raise serializers.ValidationError(
+                "Data odbioru musi być późniejsza niż data zamówienia.")
+        return data
 
 
 class OrderDetailsSerializer(serializers.HyperlinkedModelSerializer):
