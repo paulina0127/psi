@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from django.contrib.auth.models import *
 
 
 class CustomerSerializer(serializers.HyperlinkedModelSerializer):
@@ -12,16 +13,9 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class AccountSerializer(serializers.HyperlinkedModelSerializer):
-    password = serializers.CharField(max_length=45, write_only=True, style={
-        'input_type': 'password'})
-    customer = serializers.SlugRelatedField(
-        queryset=Customer.objects.all(), slug_field='id', allow_null=True)
-    url = serializers.HyperlinkedIdentityField(
-        view_name="account-detail")
-
     class Meta:
-        model = Account
-        fields = ['url', 'id', 'email', 'password', 'customer']
+        model = User
+        fields = ['url', 'username', 'first_name', 'last_name', 'email']
 
 
 class ProductTypeSerializer(serializers.HyperlinkedModelSerializer):
@@ -82,7 +76,7 @@ class ProductSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['url', 'id', 'name', 'price', 'type', 'flavour']
+        fields = ['url', 'id', 'name', 'type', 'flavour']
 
     def validate_price(self, value):
         if value <= 0:
@@ -109,19 +103,28 @@ class OrderSerializer(serializers.HyperlinkedModelSerializer):
         return value
 
     def validate_total(self, value):
-        if value <= 0:
+        if value < 0:
             raise serializers.ValidationError(
-                "Cena całkowita musi być większa niż 0.")
+                "Cena całkowita musi być liczbą dodatnia.")
         return value
 
+<<<<<<< Updated upstream
     # def validate(self, data):
     #     if self.data['order_date'] > self.data['pickup_date']:
     #         raise serializers.ValidationError(
     #             "Data odbioru musi być późniejsza niż data zamówienia.")
+=======
+    def validate_pickup_date(self, value):
+        if value < datetime.date.today():
+            raise serializers.ValidationError(
+                "Data odbioru musi być późniejsza niż data zamówienia.")
+        return value
+>>>>>>> Stashed changes
 
 
 class OrderDetailsSerializer(serializers.HyperlinkedModelSerializer):
-    special_request = serializers.CharField(max_length=255, allow_null=True)
+    special_request = serializers.CharField(
+        max_length=255, style={'type': 'textarea'}, allow_null=True)
     order = serializers.SlugRelatedField(
         queryset=Order.objects.all(), slug_field='id')
     product = serializers.SlugRelatedField(

@@ -14,16 +14,6 @@ class Customer(models.Model):
         return self.name + " " + self.surname
 
 
-class Account(models.Model):
-    email = models.EmailField()
-    password = models.CharField(max_length=45)
-    customer = models.ForeignKey(
-        Customer, related_name='accounts', on_delete=models.CASCADE, null=True)
-
-    def __str__(self) -> str:
-        return self.email
-
-
 class ProductType(models.Model):
     name = models.CharField(max_length=45)
     size = models.CharField(max_length=45)
@@ -53,7 +43,6 @@ class ProductTopper(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=45, blank=True)
-    price = models.FloatField(blank=True)
     type = models.ForeignKey(
         ProductType, related_name='products', on_delete=models.CASCADE)
     flavour = models.ForeignKey(
@@ -64,7 +53,6 @@ class Product(models.Model):
 
     def save(self, *args, **kwargs):
         self.name = self.flavour.name + " " + self.type.size + " " + self.type.name
-        self.price = self.type.price
         super(Product, self).save(*args, **kwargs)
 
 
@@ -81,7 +69,7 @@ class Order(models.Model):
     order_date = models.DateField(default=datetime.date.today, blank=True)
     pickup_date = models.DateField()
     pickup_time = models.TimeField()
-    total = models.FloatField()
+    total = models.FloatField(default=0, blank=True)
     customer = models.ForeignKey(
         Customer, related_name='orders', on_delete=models.CASCADE)
 
@@ -91,11 +79,6 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         self.status = "New"
         super(Order, self).save(*args, **kwargs)
-
-    def clean(self) -> bool:
-        if self.pickup_date < self.order_date:
-            return False
-        return True
 
 
 class OrderDetails(models.Model):
@@ -114,8 +97,11 @@ class OrderDetails(models.Model):
 
     def save(self, *args, **kwargs):
         if self.topper:
-            self.price = (self.quantity * self.product.price) + \
+            self.price = (self.quantity * self.product.type.price) + \
                 (self.quantity * self.topper.price)
         else:
-            self.price = self.quantity * self.product.price
+            self.price = self.quantity * self.product.type.price
+
+        self.order.total += self.price
+        self.order.save(update_fields=['total'])
         super(OrderDetails, self).save(*args, **kwargs)

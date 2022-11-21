@@ -23,17 +23,17 @@ class CustomerDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AccountList(generics.ListCreateAPIView):
-    queryset = Account.objects.all()
+    queryset = User.objects.all()
     serializer_class = AccountSerializer
     name = 'account-list'
-    search_fields = ['id', 'email']
+    search_fields = ['username']
     ordering_fields = ['id']
 
 
 class AccountDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Account.objects.all()
+    queryset = User.objects.all()
     serializer_class = AccountSerializer
-    name = 'account-detail'
+    name = 'user-detail'
 
 
 class ProductTypeList(generics.ListCreateAPIView):
