@@ -5,6 +5,7 @@ from .models import *
 from .serializers import *
 from rest_framework import permissions
 from django.contrib.auth.models import User
+from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter, FilterSet
 
 
 class CustomerList(generics.ListCreateAPIView):
@@ -36,11 +37,23 @@ class AccountDetail(generics.RetrieveUpdateDestroyAPIView):
     name = 'user-detail'
 
 
+class ProductTypeFilter(FilterSet):
+    min_quantity = NumberFilter(field_name='quantity', lookup_expr='gte')
+    max_quantity = NumberFilter(field_name='quantity', lookup_expr='lte')
+    min_price = NumberFilter(field_name='price', lookup_expr='gte')
+    max_price = NumberFilter(field_name='price', lookup_expr='lte')
+
+    class Meta:
+        model = ProductType
+        fields = ['name', 'min_quantity',
+                  'max_quantity', 'min_price', 'max_price']
+
+
 class ProductTypeList(generics.ListCreateAPIView):
     queryset = ProductType.objects.all()
     serializer_class = ProductTypeSerializer
     name = 'product-type-list'
-    filterset_fields = ['name']
+    filterset_class = ProductTypeFilter
     search_fields = ['name']
     ordering_fields = ['id', 'price']
 
@@ -65,10 +78,20 @@ class ProductFlavourDetail(generics.RetrieveUpdateDestroyAPIView):
     name = 'product-flavour-detail'
 
 
+class ProductTopperFilter(FilterSet):
+    min_price = NumberFilter(field_name='price', lookup_expr='gte')
+    max_price = NumberFilter(field_name='price', lookup_expr='lte')
+
+    class Meta:
+        model = ProductTopper
+        fields = ['min_price', 'max_price']
+
+
 class ProductTopperList(generics.ListCreateAPIView):
     queryset = ProductTopper.objects.all()
     serializer_class = ProductTopperSerializer
     name = 'product-topper-list'
+    filterset_class = ProductTopperFilter
     search_fields = ['name']
     ordering_fields = ['id', 'price']
 
@@ -94,13 +117,42 @@ class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
     name = 'product-detail'
 
 
+class OrderFilter(FilterSet):
+    from_order_date = DateTimeFilter(
+        field_name='order_date', lookup_expr='gte')
+    to_order_date = DateTimeFilter(field_name='order_date', lookup_expr='lte')
+    from_pickup_date = DateTimeFilter(
+        field_name='pickup_date', lookup_expr='gte')
+    to_pickup_date = DateTimeFilter(
+        field_name='pickup_date', lookup_expr='lte')
+    min_total = NumberFilter(field_name='total', lookup_expr='gte')
+    max_total = NumberFilter(field_name='total', lookup_expr='lte')
+
+    class Meta:
+        model = Order
+        fields = ['status', 'customer', 'from_order_date',
+                  'to_order_date', 'from_pickup_date', 'to_pickup_date', 'min_total', 'max_total']
+
+
 class OrderList(generics.ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     name = 'order-list'
-    filterset_fields = ['status', 'order_date', 'pickup_date']
+    filterset_class = OrderFilter
     search_fields = ['id']
     ordering_fields = ['id', 'order_date', 'pickup_date', 'total']
+
+
+class OrderDetailsFilter(FilterSet):
+    min_quantity = NumberFilter(field_name='quantity', lookup_expr='gte')
+    max_quantity = NumberFilter(field_name='quantity', lookup_expr='lte')
+    min_price = NumberFilter(field_name='price', lookup_expr='gte')
+    max_price = NumberFilter(field_name='price', lookup_expr='lte')
+
+    class Meta:
+        model = OrderDetails
+        fields = ['order', 'min_quantity',
+                  'max_quantity', 'min_price', 'max_price']
 
 
 class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -113,7 +165,7 @@ class OrderDetailsList(generics.ListCreateAPIView):
     queryset = OrderDetails.objects.all()
     serializer_class = OrderDetailsSerializer
     name = 'order-details-list'
-    filterset_fields = ['order']
+    filterset_class = OrderDetailsFilter
     search_fields = ['order']
     ordering_fields = ['id']
 
