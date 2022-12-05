@@ -90,7 +90,7 @@ class OrderDetails(models.Model):
     product = models.ForeignKey(
         Product, related_name='order_details', on_delete=models.CASCADE)
     topper = models.ForeignKey(
-        ProductTopper, related_name='custom_products', on_delete=models.CASCADE, blank=True, null=True)
+        ProductTopper, related_name='order_details', on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self) -> str:
         return self.product.name + ": " + str(self.quantity)
