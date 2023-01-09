@@ -3,21 +3,21 @@ from . import views
 
 urlpatterns = [
     path('', views.ApiRoot.as_view(), name=views.ApiRoot.name),
+    # users
+    path('users', views.UserList.as_view(),
+         name=views.UserList.name),
+    path('users/<int:pk>', views.UserDetail.as_view(),
+         name=views.UserDetail.name),
     # customers
     path('customers', views.CustomerList.as_view(),
          name=views.CustomerList.name),
     path('customers/<int:pk>', views.CustomerDetail.as_view(),
          name=views.CustomerDetail.name),
-    # accounts
-    path('accounts', views.AccountList.as_view(),
-         name=views.AccountList.name),
-    path('accounts/<int:pk>', views.AccountDetail.as_view(),
-         name=views.AccountDetail.name),
     # product types
     path('product-types', views.ProductTypeList.as_view(),
          name=views.ProductTypeList.name),
     path('product-types/<int:pk>', views.ProductTypeDetail.as_view(),
-         name='product-type-detail'),
+         name=views.ProductTypeDetail.name),
     # product flavours
     path('product-flavours', views.ProductFlavourList.as_view(),
          name=views.ProductFlavourList.name),

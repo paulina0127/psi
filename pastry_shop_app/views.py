@@ -1,11 +1,29 @@
-from rest_framework import generics
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
-from .models import *
-from .serializers import *
+from rest_framework import generics
 from rest_framework import permissions
 from django.contrib.auth.models import User
-from django_filters import AllValuesFilter, DateTimeFilter, NumberFilter, FilterSet
+from django_filters import DateTimeFilter, NumberFilter, FilterSet
+from .models import *
+from .serializers import *
+from .custom_permissions import *
+
+
+class UserList(generics.ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    name = 'user-list'
+    search_fields = ['username']
+    ordering_fields = ['id']
+    permission_classes = (permissions.IsAuthenticated,
+                          IsCurrentUserAccountOwner,)
+
+
+class UserDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    name = 'user-detail'
+    permission_classes = (IsCurrentUserAccountOwner,)
 
 
 class CustomerList(generics.ListCreateAPIView):
@@ -15,26 +33,21 @@ class CustomerList(generics.ListCreateAPIView):
     filterset_fields = ['surname', 'name']
     search_fields = ['id', 'surname', 'name']
     ordering_fields = ['id', 'surname']
+    permission_classes = (
+        IsCurrentUserOwner,)
+
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(owner=self.request.user)
+        else:
+            serializer.save(owner=None)
 
 
 class CustomerDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
     name = 'customer-detail'
-
-
-class AccountList(generics.ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = AccountSerializer
-    name = 'account-list'
-    search_fields = ['username']
-    ordering_fields = ['id']
-
-
-class AccountDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = AccountSerializer
-    name = 'user-detail'
+    permission_classes = (IsCurrentUserOwner,)
 
 
 class ProductTypeFilter(FilterSet):
@@ -56,12 +69,16 @@ class ProductTypeList(generics.ListCreateAPIView):
     filterset_class = ProductTypeFilter
     search_fields = ['name']
     ordering_fields = ['id', 'price']
+    permission_classes = (
+        permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class ProductTypeDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProductType.objects.all()
     serializer_class = ProductTypeSerializer
     name = 'product-type-detail'
+    permission_classes = (
+        permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class ProductFlavourList(generics.ListCreateAPIView):
@@ -70,12 +87,16 @@ class ProductFlavourList(generics.ListCreateAPIView):
     name = 'product-flavour-list'
     search_fields = ['name']
     ordering_fields = ['id']
+    permission_classes = (
+        permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class ProductFlavourDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProductFlavour.objects.all()
     serializer_class = ProductFlavourSerializer
     name = 'product-flavour-detail'
+    permission_classes = (
+        permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class ProductTopperFilter(FilterSet):
@@ -94,12 +115,16 @@ class ProductTopperList(generics.ListCreateAPIView):
     filterset_class = ProductTopperFilter
     search_fields = ['name']
     ordering_fields = ['id', 'price']
+    permission_classes = (
+        permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class ProductTopperDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProductTopper.objects.all()
     serializer_class = ProductTopperSerializer
-    name = 'product-topper-detail'
+    name = 'producttopper-detail'
+    permission_classes = (
+        permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class ProductList(generics.ListCreateAPIView):
@@ -109,12 +134,16 @@ class ProductList(generics.ListCreateAPIView):
     filterset_fields = ['type', 'flavour']
     search_fields = ['id', 'name']
     ordering_fields = ['id', 'price']
+    permission_classes = (
+        permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class ProductDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     name = 'product-detail'
+    permission_classes = (
+        permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
 
 class OrderFilter(FilterSet):
@@ -141,6 +170,14 @@ class OrderList(generics.ListCreateAPIView):
     filterset_class = OrderFilter
     search_fields = ['id']
     ordering_fields = ['id', 'order_date', 'pickup_date', 'total']
+    permission_classes = (
+        IsCurrentUserOwner,)
+
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(owner=self.request.user)
+        else:
+            serializer.save(owner=None)
 
 
 class OrderDetailsFilter(FilterSet):
@@ -159,6 +196,7 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     name = 'order-detail'
+    permission_classes = (IsCurrentUserOwner,)
 
 
 class OrderDetailsList(generics.ListCreateAPIView):
@@ -168,20 +206,29 @@ class OrderDetailsList(generics.ListCreateAPIView):
     filterset_class = OrderDetailsFilter
     search_fields = ['order']
     ordering_fields = ['id']
+    permission_classes = (
+        IsCurrentUserOwner,)
+
+    def perform_create(self, serializer):
+        if self.request.user.is_authenticated:
+            serializer.save(owner=self.request.user)
+        else:
+            serializer.save(owner=None)
 
 
 class OrderDetailsDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = OrderDetails.objects.all()
     serializer_class = OrderDetailsSerializer
-    name = 'order-details-detail'
+    name = 'orderdetails-detail'
+    permission_classes = (IsCurrentUserOwner,)
 
 
 class ApiRoot(generics.GenericAPIView):
     name = 'api-root'
 
     def get(self, request, *args, **kwargs):
-        return Response({'customers': reverse(CustomerList.name, request=request),
-                         'accounts': reverse(AccountList.name, request=request),
+        return Response({'users': reverse(UserList.name, request=request),
+                         'customers': reverse(CustomerList.name, request=request),
                          'product-types': reverse(ProductTypeList.name, request=request),
                          'product-flavours': reverse(ProductFlavourList.name, request=request),
                          'product-toppers': reverse(ProductTopperList.name, request=request),
