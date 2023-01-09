@@ -1,14 +1,16 @@
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
-from django.core.exceptions import ValidationError
-import datetime
 
 
 class Customer(models.Model):
     name = models.CharField(max_length=45)
     surname = models.CharField(max_length=45)
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     phone = PhoneNumberField()
+    owner = models.OneToOneField(
+        'auth.User', related_name='accounts', on_delete=models.CASCADE, blank=True, null=True)
+    # owner = models.ForeignKey(
+    #     'auth.User', related_name='accounts', on_delete=models.CASCADE, unique=True, blank=True, null=True)
 
     def __str__(self) -> str:
         return self.name + " " + self.surname
@@ -22,7 +24,11 @@ class ProductType(models.Model):
     price = models.FloatField()
 
     def __str__(self) -> str:
-        return self.size + " " + self.name
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.name = self.size + " " + self.name
+        super(ProductType, self).save(*args, **kwargs)
 
 
 class ProductFlavour(models.Model):
@@ -52,7 +58,7 @@ class Product(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        self.name = self.flavour.name + " " + self.type.size + " " + self.type.name
+        self.name = self.flavour.name + " " + self.type.name
         super(Product, self).save(*args, **kwargs)
 
 
@@ -66,18 +72,21 @@ class Order(models.Model):
 
     status = models.CharField(max_length=45, choices=STATUS_CHOICES,
                               blank=True)
-    order_date = models.DateField(default=datetime.date.today, blank=True)
+    order_date = models.DateField(auto_now_add=True, blank=True)
     pickup_date = models.DateField()
     pickup_time = models.TimeField()
     total = models.FloatField(default=0, blank=True)
     customer = models.ForeignKey(
         Customer, related_name='orders', on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        'auth.User', related_name='orders', on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self) -> str:
         return "Nr: " + str(self.id)
 
     def save(self, *args, **kwargs):
-        self.status = "New"
+        if not self.status:
+            self.status = "New"
         super(Order, self).save(*args, **kwargs)
 
 
@@ -91,6 +100,8 @@ class OrderDetails(models.Model):
         Product, related_name='order_details', on_delete=models.CASCADE)
     topper = models.ForeignKey(
         ProductTopper, related_name='order_details', on_delete=models.CASCADE, blank=True, null=True)
+    owner = models.ForeignKey(
+        'auth.User', related_name='order_details', on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self) -> str:
         return self.product.name + ": " + str(self.quantity)
