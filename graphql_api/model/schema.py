@@ -56,13 +56,18 @@ class PayType(DjangoObjectType):
 
 
 class Query(graphene.ObjectType):
-    commodites = graphene.List(CommodityType)
+    commodities = graphene.List(CommodityType)
     clients = graphene.List(ClientType)
     orders = graphene.List(OrderType)
     baskets = graphene.List(BasketType)
     pay = graphene.List(PayType)
+    commodity = graphene.Field(CommodityType, id=graphene.ID())
+    client = graphene.Field(ClientType, id=graphene.ID())
+    order = graphene.Field(OrderType, id=graphene.ID())
+    basket = graphene.Field(BasketType, id=graphene.ID())
+    pay = graphene.Field(PayType, id=graphene.ID())
 
-    def resolve_commodites(root, info, **kwargs):
+    def resolve_commodities(root, info, **kwargs):
         return Commodity.objects.all()
 
     def resolve_clients(root, info, **kwargs):
@@ -75,49 +80,77 @@ class Query(graphene.ObjectType):
         return Basket.objects.all()
 
     def resolve_pay(root, info, **kwargs):
-        return Pay.object.all()
+        return Pay.objects.all()
+
+    def resolve_commodity(root, info, id):
+        return Commodity.objects.get(pk=id)
+
+    def resolve_client(root, info, id):
+        return Client.objects.get(pk=id)
+
+    def resolve_order(root, info, id):
+        return Order.objects.get(pk=id)
+
+    def resolve_basket(root, info, id):
+        return Basket.objects.get(pk=id)
+
+    def resolve_pay(root, info, id):
+        return Pay.objects.get(pk=id)
 
 
-class CommoditeInput(graphene.InputObjectType):
+class CommodityInput(graphene.InputObjectType):
     name = graphene.String()
     description = graphene.String()
     price = graphene.Decimal()
     quantity = graphene.Int()
 
 
-class CreateCommodite(graphene.Mutation):
+class CreateCommodity(graphene.Mutation):
     class Arguments:
-        input = CommoditeInput(required=True)
+        input = CommodityInput(required=True)
 
-    commodite = graphene.Field(CommodityType)
+    commodity = graphene.Field(CommodityType)
 
     @classmethod
     def mutate(cls, root, info, input):
-        commodite = Commodity()
-        commodite.name = input.name
-        commodite.description = input.description
-        commodite.price = input.price
-        commodite.quantity = input.quantity
-        commodite.save()
-        return CreateCommodite(commodite=commodite)
+        commodity = Commodity()
+        commodity.name = input.name
+        commodity.description = input.description
+        commodity.price = input.price
+        commodity.quantity = input.quantity
+        commodity.save()
+        return CreateCommodity(commodity=commodity)
 
 
-class UpdateCommodite(graphene.Mutation):
+class UpdateCommodity(graphene.Mutation):
     class Arguments:
-        input = CommoditeInput(required=True)
+        input = CommodityInput(required=True)
         id = graphene.ID()
 
-    commodite = graphene.Field(CommodityType)
+    commodity = graphene.Field(CommodityType)
 
     @classmethod
     def mutate(cls, root, info, input, id):
-        commodite = Commodity.objects.get(pk=id)
-        commodite.name = input.name
-        commodite.description = input.description
-        commodite.price = input.price
-        commodite.quantity = input.quantity
-        commodite.save()
-        return UpdateCommodite(commodite=commodite)
+        commodity = Commodity.objects.get(pk=id)
+        commodity.name = input.name
+        commodity.description = input.description
+        commodity.price = input.price
+        commodity.quantity = input.quantity
+        commodity.save()
+        return UpdateCommodity(commodity=commodity)
+
+
+class DeleteCommodity(graphene.Mutation):
+    response = graphene.Boolean()
+
+    class Arguments:
+        id = graphene.ID()
+
+    @classmethod
+    def mutate(cls, root, info, id):
+        commodity = Commodity.objects.get(pk=id)
+        commodity.delete()
+        return cls(response=True)
 
 
 class ClientInput(graphene.InputObjectType):
@@ -159,23 +192,36 @@ class UpdateClient(graphene.Mutation):
         return CreateClient(client=client)
 
 
+class DeleteClient(graphene.Mutation):
+    response = graphene.Boolean()
+
+    class Arguments:
+        id = graphene.ID()
+
+    @classmethod
+    def mutate(cls, root, info, id):
+        client = Client.objects.get(pk=id)
+        client.delete()
+        return cls(response=True)
+
+
 class CreateOrder(graphene.Mutation):
     class Arguments:
-        client = graphene.Int()
+        client = graphene.ID()
 
     order = graphene.Field(OrderType)
 
     @classmethod
     def mutate(cls, root, info, client):
         order = Order()
-        order.client = client
+        order.client = Client.objects.get(pk=client)
         order.save()
         return CreateOrder(order=order)
 
 
 class UpdateOrder(graphene.Mutation):
     class Arguments:
-        client = graphene.Int()
+        client = graphene.ID()
         id = graphene.ID()
 
     order = graphene.Field(OrderType)
@@ -183,14 +229,27 @@ class UpdateOrder(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, client, id):
         order = Order.objects.get(pk=id)
-        order.client = client
+        order.client = Client.objects.get(pk=client)
         order.save()
         return CreateOrder(order=order)
 
 
+class DeleteOrder(graphene.Mutation):
+    response = graphene.Boolean()
+
+    class Arguments:
+        id = graphene.ID()
+
+    @classmethod
+    def mutate(cls, root, info, id):
+        order = Order.objects.get(pk=id)
+        order.delete()
+        return cls(response=True)
+
+
 class BasketInput(graphene.InputObjectType):
-    commodity = graphene.Int()
-    order = graphene.Int()
+    commodity = graphene.ID()
+    order = graphene.ID()
 
 
 class CreateBasket(graphene.Mutation):
@@ -202,8 +261,8 @@ class CreateBasket(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, input):
         basket = Basket()
-        basket.commodity = input.commodity
-        basket.order = input.order
+        basket.commodity = Commodity.objects.get(pk=input.commodity)
+        basket.order = Order.objects.get(pk=input.order)
         basket.save()
         return CreateBasket(basket=basket)
 
@@ -218,14 +277,27 @@ class UpdateBasket(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, input, id):
         basket = Basket.objects.get(pk=id)
-        basket.commodity = input.commodity
-        basket.order = input.order
+        basket.commodity = Commodity.objects.get(pk=input.commodity)
+        basket.order = Order.objects.get(pk=input.order)
         basket.save()
         return UpdateBasket(basket=basket)
 
 
+class DeleteBasket(graphene.Mutation):
+    response = graphene.Boolean()
+
+    class Arguments:
+        id = graphene.ID()
+
+    @classmethod
+    def mutate(cls, root, info, id):
+        basket = Basket.objects.get(pk=id)
+        basket.delete()
+        return cls(response=True)
+
+
 class PayInput(graphene.InputObjectType):
-    order = graphene.Int()
+    order = graphene.ID()
     price = graphene.Decimal()
 
 
@@ -238,7 +310,7 @@ class CreatePay(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, input):
         pay = Pay()
-        pay.order = input.order
+        pay.order = Order.objects.get(pk=input.order)
         pay.price = input.price
         pay.save()
         return CreatePay(pay=pay)
@@ -254,23 +326,41 @@ class UpdatePay(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, input, id):
         pay = Pay.objects.get(pk=id)
-        pay.order = input.order
+        pay.order = Order.objects.get(pk=input.order)
         pay.price = input.price
         pay.save()
         return UpdatePay(pay=pay)
 
 
+class DeletePay(graphene.Mutation):
+    response = graphene.Boolean()
+
+    class Arguments:
+        id = graphene.ID()
+
+    @classmethod
+    def mutate(cls, root, info, id):
+        pay = Pay.objects.get(pk=id)
+        pay.delete()
+        return cls(response=True)
+
+
 class Mutation(graphene.ObjectType):
-    create_commodite = CreateCommodite.Field()
+    create_commodity = CreateCommodity.Field()
     create_client = CreateClient.Field()
     create_order = CreateOrder.Field()
     create_basket = CreateBasket.Field()
     create_pay = CreatePay.Field()
-    update_commodite = UpdateCommodite.Field()
+    update_commodity = UpdateCommodity.Field()
     update_client = UpdateClient.Field()
     update_order = UpdateOrder.Field()
     update_basket = UpdateBasket.Field()
     update_pay = UpdatePay.Field()
+    delete_commodity = DeleteCommodity.Field()
+    delete_client = DeleteClient.Field()
+    delete_order = DeleteOrder.Field()
+    delete_basket = DeleteBasket.Field()
+    delete_pay = DeletePay.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

@@ -28,20 +28,24 @@ class Client(models.Model):
 
 
 class Order(models.Model):
-    client = models.ForeignKey(Client, related_name='orders', on_delete=models.CASCADE, null=True, blank=True)
+    client = models.ForeignKey(
+        Client, related_name='orders', on_delete=models.CASCADE, null=True, blank=True)
 
 
 class Basket(models.Model):
-    commodity = models.ForeignKey(Commodity, related_name='basket', on_delete=models.CASCADE, null=True, blank=True)
-    order = models.ForeignKey(Order, related_name='basket', on_delete=models.CASCADE, null=True, blank=True)
+    commodity = models.ForeignKey(
+        Commodity, related_name='basket', on_delete=models.CASCADE, null=True, blank=True)
+    order = models.ForeignKey(
+        Order, related_name='basket', on_delete=models.CASCADE, null=True, blank=True)
 
 
 class Pay(models.Model):
-    order = models.ForeignKey(Order, related_name='pay', on_delete=models.CASCADE, null=True, blank=True)
+    order = models.ForeignKey(
+        Order, related_name='pay', on_delete=models.CASCADE, null=True, blank=True)
     price = models.DecimalField(decimal_places=2, max_digits=14)
 
     class Meta:
         ordering = ('order',)
 
     def __str__(self):
-        return self.price
+        return str(self.price)
