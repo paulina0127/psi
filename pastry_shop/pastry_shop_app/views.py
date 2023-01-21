@@ -15,8 +15,7 @@ class UserList(generics.ListCreateAPIView):
     name = 'user-list'
     search_fields = ['username']
     ordering_fields = ['id']
-    permission_classes = (permissions.IsAuthenticated,
-                          IsCurrentUserAccountOwner,)
+    permission_classes = (IsCurrentUserAccountOwner,)
 
 
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -33,8 +32,7 @@ class CustomerList(generics.ListCreateAPIView):
     filterset_fields = ['surname', 'name']
     search_fields = ['id', 'surname', 'name']
     ordering_fields = ['id', 'surname']
-    permission_classes = (
-        IsCurrentUserOwner,)
+    permission_classes = (IsCurrentUserOwner,)
 
     def perform_create(self, serializer):
         if self.request.user.is_authenticated:
@@ -76,7 +74,7 @@ class ProductTypeList(generics.ListCreateAPIView):
 class ProductTypeDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProductType.objects.all()
     serializer_class = ProductTypeSerializer
-    name = 'product-type-detail'
+    name = 'producttype-detail'
     permission_classes = (
         permissions.DjangoModelPermissionsOrAnonReadOnly,)
 
@@ -94,7 +92,7 @@ class ProductFlavourList(generics.ListCreateAPIView):
 class ProductFlavourDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ProductFlavour.objects.all()
     serializer_class = ProductFlavourSerializer
-    name = 'product-flavour-detail'
+    name = 'productflavour-detail'
     permission_classes = (
         permissions.DjangoModelPermissionsOrAnonReadOnly,)
 

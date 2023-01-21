@@ -9,8 +9,6 @@ class Customer(models.Model):
     phone = PhoneNumberField()
     owner = models.OneToOneField(
         'auth.User', related_name='accounts', on_delete=models.CASCADE, blank=True, null=True)
-    # owner = models.ForeignKey(
-    #     'auth.User', related_name='accounts', on_delete=models.CASCADE, unique=True, blank=True, null=True)
 
     def __str__(self) -> str:
         return self.name + " " + self.surname
@@ -21,14 +19,15 @@ class ProductType(models.Model):
     size = models.CharField(max_length=45)
     servings = models.CharField(max_length=45)
     quantity = models.PositiveIntegerField()
-    price = models.FloatField()
+    price = models.DecimalField(max_digits=14, decimal_places=2)
 
     def __str__(self) -> str:
         return self.name
 
     def save(self, *args, **kwargs):
-        self.name = self.size + " " + self.name
-        super(ProductType, self).save(*args, **kwargs)
+        if self.size not in self.name:
+            self.name = self.size + " " + self.name
+            super(ProductType, self).save(*args, **kwargs)
 
 
 class ProductFlavour(models.Model):
@@ -41,7 +40,7 @@ class ProductFlavour(models.Model):
 
 class ProductTopper(models.Model):
     name = models.CharField(max_length=45)
-    price = models.FloatField()
+    price = models.DecimalField(max_digits=14, decimal_places=2)
 
     def __str__(self) -> str:
         return self.name
@@ -75,7 +74,8 @@ class Order(models.Model):
     order_date = models.DateField(auto_now_add=True, blank=True)
     pickup_date = models.DateField()
     pickup_time = models.TimeField()
-    total = models.FloatField(default=0, blank=True)
+    total = models.DecimalField(
+        max_digits=14, decimal_places=2, default=0, blank=True)
     customer = models.ForeignKey(
         Customer, related_name='orders', on_delete=models.CASCADE)
     owner = models.ForeignKey(
@@ -92,7 +92,7 @@ class Order(models.Model):
 
 class OrderDetails(models.Model):
     quantity = models.PositiveIntegerField()
-    price = models.FloatField(blank=True)
+    price = models.DecimalField(max_digits=14, decimal_places=2, blank=True)
     special_request = models.CharField(max_length=255, blank=True, null=True)
     order = models.ForeignKey(
         Order, related_name='order_details', on_delete=models.CASCADE)

@@ -4,20 +4,6 @@ import datetime
 from .models import *
 
 
-class UserCustomerSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Customer
-        fields = ['url', 'id', 'name', 'surname', 'email', 'phone']
-
-
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    customer = UserCustomerSerializer(many=False, read_only=True)
-
-    class Meta:
-        model = User
-        fields = ['url', 'id', 'username', 'customer']
-
-
 class OrderOrderDetailsSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = OrderDetails
@@ -32,6 +18,21 @@ class CustomerOrderSerializer(serializers.HyperlinkedModelSerializer):
         model = Order
         fields = ['url', 'id', 'status', 'order_date',
                   'pickup_date', 'pickup_time', 'total', 'order_details']
+
+
+class UserCustomerSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ['url', 'id', 'name', 'surname', 'email', 'phone']
+
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    customer = UserCustomerSerializer(many=False, read_only=True)
+    orders = CustomerOrderSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['url', 'id', 'username', 'customer', 'orders']
 
 
 class CustomerSerializer(serializers.HyperlinkedModelSerializer):
@@ -49,7 +50,7 @@ class CustomerSerializer(serializers.HyperlinkedModelSerializer):
 
 class ProductTypeSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name="product-type-detail")
+        view_name="producttype-detail")
     products = serializers.HyperlinkedRelatedField(
         many=True, read_only=True, view_name='product-detail')
 
@@ -73,7 +74,7 @@ class ProductTypeSerializer(serializers.HyperlinkedModelSerializer):
 
 class ProductFlavourSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name="product-flavour-detail")
+        view_name="productflavour-detail")
     description = serializers.CharField(
         max_length=255, style={'type': 'textarea'})
     products = serializers.HyperlinkedRelatedField(
@@ -135,7 +136,7 @@ class OrderSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Order
         fields = ['url', 'id', 'status', 'order_date',
-                  'pickup_date', 'pickup_time', 'total', 'customer', 'order_details', 'owner']
+                  'pickup_date', 'pickup_time', 'total', 'customer', 'owner', 'order_details']
         read_only_fields = ['order_date', 'total']
 
     def validate_total(self, value):
